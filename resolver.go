@@ -1,12 +1,13 @@
 package kuberesolver
 
 import (
-	"google.golang.org/grpc/resolver"
-	"google.golang.org/grpc/grpclog"
-	"time"
-	"strconv"
 	"net"
+	"strconv"
 	"strings"
+	"time"
+
+	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/resolver"
 )
 
 const (
@@ -18,12 +19,12 @@ type k8sResolverBuilder struct {
 	namespace string
 }
 
-func (b *k8sResolverBuilder) Build(target string, cc resolver.ClientConn, opts resolver.BuildOption) (resolver.Resolver, error) {
+func (b *k8sResolverBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOption) (resolver.Resolver, error) {
 	result := make(chan Event)
 	stop := make(chan struct{})
 
-	servicePort := strings.Split(target, ":")
-	var port int64 = 0
+	servicePort := strings.Split(target.Endpoint, ":")
+	var port int64
 
 	if len(servicePort) > 1 {
 		var err error
@@ -62,6 +63,7 @@ func (b *k8sResolverBuilder) Scheme() string {
 	return scheme
 }
 
+// NewResolver returns a new k8s resolver builder to a given namespace
 func NewResolver(namespace string) (resolver.Builder, error) {
 	client, err := newK8sClient()
 	if err != nil {
